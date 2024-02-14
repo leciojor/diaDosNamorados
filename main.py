@@ -1,39 +1,37 @@
 import pygame
 import random
 
-# Initialize Pygame
 pygame.init()
 
-# Constants
 WIDTH, HEIGHT = 800, 600
 PLAYER_WIDTH, PLAYER_HEIGHT = 50, 50
 GRAVITY = 0.5
 JUMP_VELOCITY = -10
-MOVEMENT_SPEED = 5  # Adjust movement speed as needed
+MOVEMENT_SPEED = 5
 FPS = 60
-RAIN_DELAY = 3000  # Delay for 3 seconds (in milliseconds)
-MAX_RAIN_PARTICLES = 10  # Maximum number of raindrops
-COUNTDOWN_FONT_SIZE = 120  # Font size for countdown
-SCORE_FONT_SIZE = 60  # Font size for score
+RAIN_DELAY = 3000
+MAX_RAIN_PARTICLES = 10
+COUNTDOWN_FONT_SIZE = 120
+SCORE_FONT_SIZE = 60
 
-# Colors
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+NAVY_BLUE = (0, 0, 128)
 
-# Load images
 player_image = pygame.image.load("CUEIORight.png")
 background_image = pygame.image.load("Papel-de-Parede.jpg.webp")
 raindrop1_image = pygame.image.load("decio__.png")
 raindrop2_image = pygame.image.load("lilou__.png")
+new_player_image = pygame.image.load("a.png")
 
-# Set up the display
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Presente Dia dos Namorados")
 
-# Load sound
-pygame.mixer.music.load("cute-level-up-3-189853.mp3")
+pygame.mixer.music.load("Carnaval.mp3")
+pygame.mixer.music.play(-1)
+point_sound = pygame.mixer.Sound("cute-level-up-3-189853.mp3")
+level_passed_sound = pygame.mixer.Sound("level-passed-143039.mp3")
 
-# Player class
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -45,6 +43,8 @@ class Player(pygame.sprite.Sprite):
         self.score = 0
         self.moving_left = False
         self.moving_right = False
+        self.progress = 0
+        self.level_up_sound_played = False
 
     def update(self):
         self.velocity += GRAVITY
@@ -59,14 +59,21 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = HEIGHT
             self.velocity = 0
 
+        if self.score >= 10:
+            self.image = new_player_image
+
+        if self.progress >= 1:
+            if not self.level_up_sound_played:
+                level_passed_sound.play()
+                self.level_up_sound_played = True
+
     def jump(self):
         self.velocity = JUMP_VELOCITY
 
     def increase_score(self):
         self.score += 1
-        pygame.mixer.music.play()  # Play sound when score increases
+        self.progress = self.score / 10
 
-# Raindrop class
 class Raindrop(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -83,31 +90,35 @@ class Raindrop(pygame.sprite.Sprite):
             self.rect.x = random.randint(0, WIDTH - self.rect.width)
             self.image = random.choice([raindrop1_image, raindrop2_image])
 
-# Function to render text onto the screen
 def draw_text(text, font, color, surface, x, y):
     text_surface = font.render(text, True, color)
     text_rect = text_surface.get_rect()
     text_rect.topleft = (x, y)
     surface.blit(text_surface, text_rect)
 
-# Create sprite groups
+def draw_progress_bar(surface, x, y, width, height, percent):
+    BAR_COLOR = NAVY_BLUE
+    BAR_BG_COLOR = (100, 100, 100)
+
+    progress_width = int(width * percent)
+    progress_rect = pygame.Rect(x, y, progress_width, height)
+    pygame.draw.rect(surface, BAR_COLOR, progress_rect)
+
+    bg_rect = pygame.Rect(x, y, width, height)
+    pygame.draw.rect(surface, BAR_BG_COLOR, bg_rect, 2)
+
+player = Player()
 all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
 raindrops = pygame.sprite.Group()
 
-# Create player
-player = Player()
-all_sprites.add(player)
-
-# Variables to track the delay for countdown
 start_time = pygame.time.get_ticks()
 countdown_started = True
-countdown_duration = 3000  # Countdown duration (in milliseconds)
+countdown_duration = 3000
 
-# Main loop
 clock = pygame.time.Clock()
 running = True
 while running:
-    # Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -124,35 +135,34 @@ while running:
             elif event.key == pygame.K_RIGHT:
                 player.moving_right = False
 
-    # Update
     all_sprites.update()
 
-    # Create raindrops continuously
     if pygame.time.get_ticks() - start_time >= RAIN_DELAY:
-        # Create raindrops
         if len(raindrops) < MAX_RAIN_PARTICLES:
             raindrop = Raindrop()
             all_sprites.add(raindrop)
             raindrops.add(raindrop)
 
-    # Check for collisions between player and raindrops
     collisions = pygame.sprite.spritecollide(player, raindrops, True)
     if collisions:
         player.increase_score()
+        point_sound.play()
 
-    # Draw
     screen.blit(background_image, (0, 0))
     all_sprites.draw(screen)
 
-    # Draw countdown timer if countdown is active
     if countdown_started:
         countdown_remaining = max(0, (countdown_duration - (pygame.time.get_ticks() - start_time)) // 1000 + 1)
-        countdown_font = pygame.font.Font(None, COUNTDOWN_FONT_SIZE)
-        draw_text(str(countdown_remaining), countdown_font, RED, screen, WIDTH // 2, HEIGHT // 2)
+        if countdown_remaining > 0:
+            countdown_font = pygame.font.Font(None, COUNTDOWN_FONT_SIZE)
+            draw_text(str(countdown_remaining), countdown_font, RED, screen, WIDTH // 2, HEIGHT // 2)
+        else:
+            countdown_started = False
 
-    # Draw score
-    score_font = pygame.font.Font(None, SCORE_FONT_SIZE)
-    draw_text("Pontos: " + str(player.score), score_font, RED, screen, 20, 20)
+    draw_text("PONTOS: " + str(player.score), pygame.font.Font(None, SCORE_FONT_SIZE), RED, screen, 20, 20)
+    draw_text("PODER", pygame.font.Font(None, SCORE_FONT_SIZE), RED, screen, 20, 100)
+
+    draw_progress_bar(screen, 20, 140, 600, 30, player.progress)
 
     pygame.display.flip()
     clock.tick(FPS)
