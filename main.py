@@ -1,9 +1,10 @@
 import pygame
 import random
 
+
 pygame.init()
 
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 650, 600
 PLAYER_WIDTH, PLAYER_HEIGHT = 50, 50
 GRAVITY = 0.5
 JUMP_VELOCITY = -10
@@ -18,16 +19,21 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 NAVY_BLUE = (0, 0, 128)
 
-player_image = pygame.image.load("CUEIORight.png")
-background_image = pygame.image.load("Papel-de-Parede.jpg.webp")
-raindrop1_image = pygame.image.load("decio__.png")
-raindrop2_image = pygame.image.load("lilou__.png")
-new_player_image = pygame.image.load("a.png")
+player_image = pygame.image.load("IMG_0615-2.jpg")
+background_image = pygame.image.load("D85095D8-.jpg")
+raindrop1_image = pygame.image.load("90DD7B9E--2.jpg")
+raindrop2_image = pygame.image.load("298B6100--2.jpg")
+image_3 = pygame.image.load("549A4F07--2.jpg")
+new_player_image = pygame.image.load("IMG_0624-2.jpg")
+
+#setting icon
+icon = pygame.image.load('IMG_0615.jpg')
+pygame.display.set_icon(icon)
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Presente Dia dos Namorados")
+pygame.display.set_caption("HAPPY BIRTHDAY GIGI")
 
-pygame.mixer.music.load("Carnaval.mp3")
+pygame.mixer.music.load("The Avengers Theme (Good Part Loop).mp3") 
 pygame.mixer.music.play(-1)
 point_sound = pygame.mixer.Sound("cute-level-up-3-189853.mp3")
 level_passed_sound = pygame.mixer.Sound("level-passed-143039.mp3")
@@ -77,7 +83,7 @@ class Player(pygame.sprite.Sprite):
 class Raindrop(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image = random.choice([raindrop1_image, raindrop2_image])
+        self.image = random.choice([raindrop1_image, raindrop2_image, image_3])
         self.rect = self.image.get_rect()
         self.rect.x = random.randint(0, WIDTH - self.rect.width)
         self.rect.y = random.randint(-HEIGHT, 0)
@@ -88,7 +94,7 @@ class Raindrop(pygame.sprite.Sprite):
         if self.rect.y > HEIGHT:
             self.rect.y = random.randint(-HEIGHT, 0)
             self.rect.x = random.randint(0, WIDTH - self.rect.width)
-            self.image = random.choice([raindrop1_image, raindrop2_image])
+            self.image = random.choice([raindrop1_image, raindrop2_image, image_3])
 
 def draw_text(text, font, color, surface, x, y):
     text_surface = font.render(text, True, color)
@@ -159,8 +165,8 @@ while running:
         else:
             countdown_started = False
 
-    draw_text("PONTOS: " + str(player.score), pygame.font.Font(None, SCORE_FONT_SIZE), RED, screen, 20, 20)
-    draw_text("PODER", pygame.font.Font(None, SCORE_FONT_SIZE), RED, screen, 20, 100)
+    draw_text("POINTS: " + str(player.score), pygame.font.Font(None, SCORE_FONT_SIZE), RED, screen, 20, 20)
+    draw_text("POWER", pygame.font.Font(None, SCORE_FONT_SIZE), RED, screen, 20, 100)
 
     draw_progress_bar(screen, 20, 140, 600, 30, player.progress)
 
